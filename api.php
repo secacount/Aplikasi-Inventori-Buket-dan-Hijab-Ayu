@@ -38,7 +38,7 @@ try {
             'ok' => true,
             'csrf' => $_SESSION['csrf_token'],
             'user' => $token ? ($_SESSION['sb_user'] ?? null) : null,
-            'configured' => is_array($GLOBALS['APP_CONFIG'] ?? null),
+            'configured' => app_config_is_valid(),
         ]);
     }
 

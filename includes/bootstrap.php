@@ -46,6 +46,16 @@ function app_config(): array
     return $config;
 }
 
+function app_config_is_valid(): bool
+{
+    try {
+        app_config();
+        return true;
+    } catch (Throwable $e) {
+        return false;
+    }
+}
+
 function json_response(array $data, int $status = 200): never
 {
     http_response_code($status);
