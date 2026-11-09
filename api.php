@@ -115,7 +115,6 @@ try {
             'color' => trim((string)($input['color'] ?? '')) ?: null,
             'sku' => trim((string)($input['sku'] ?? '')) ?: null,
             'unit' => trim((string)($input['unit'] ?? 'pcs')) ?: 'pcs',
-            'stock_qty' => $initialStock,
             'min_stock' => max(0, (float)($input['min_stock'] ?? 0)),
             'purchase_price' => max(0, (float)($input['purchase_price'] ?? 0)),
             'stem_price' => max(0, (float)($input['stem_price'] ?? 0)),
@@ -126,7 +125,7 @@ try {
             'is_active' => true,
         ];
         if ($id !== '') {
-            unset($payload['stock_qty'], $payload['user_id']);
+            unset($payload['user_id'], $payload['is_active']);
             $query = 'rest/v1/inventory_items?id=eq.' . sb_path_id($id) . '&user_id=eq.' . rawurlencode($userId);
             $data = sb_assert(sb_request('PATCH', $query, $payload, $token, ['Prefer: return=representation']), 'Gagal memperbarui barang.');
             $newImagePath = trim((string)($payload['image_path'] ?? ''));
@@ -137,14 +136,14 @@ try {
             $data = sb_assert(sb_request('POST', 'rest/v1/inventory_items', $payload, $token, ['Prefer: return=representation']), 'Gagal menyimpan barang.');
             $createdItem = is_array($data) ? ($data[0] ?? null) : null;
             if ($createdItem && $initialStock > 0) {
-                $movement = sb_assert(sb_request('POST', 'rest/v1/rpc/register_stock_movement', [
+                sb_assert(sb_request('POST', 'rest/v1/rpc/register_stock_movement', [
                     'p_item_id' => $createdItem['id'],
                     'p_movement_type' => 'OPENING',
                     'p_quantity' => $initialStock,
                     'p_note' => 'Saldo awal barang',
                 ], $token), 'Gagal mencatat saldo awal barang.');
-                if (isset($createdItem['stock_qty']) && $createdItem['stock_qty'] !== $initialStock) {
-                    $createdItem['stock_qty'] = $initialStock;
+                if (isset($data[0])) {
+                    $data[0]['stock_qty'] = $initialStock;
                 }
             }
         }
